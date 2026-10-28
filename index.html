@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#d9506c" id="tc">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Convite · 30 anos da Bárbara">
+<meta property="og:description" content="Você está convidado(a)! Puxe o coração para revelar o convite.">
+<title>Convite Bárbara 30 anos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+[hidden]{display:none!important}
+/* Convite Revela (puxador na horizontal): a capa tem uma fenda recortada; ao puxar o coração para a esquerda, a capa desliza para o lado e revela a página de informações, que fica parada atrás. */
+:root{
+  --ink:#5a0f2e;
+  --hot:#e2157a;
+  --hot-deep:#b80062;
+  --rose:#ffd9e4;
+  --line:#e98fb0;
+  --ground:#d9506c;
+  --display:'Caveat Brush','Segoe Print',cursive;
+  --serif:'Special Elite','Courier New',monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--ground)}
+html,body{margin:0;height:100%;min-height:100lvh;overflow:hidden;overscroll-behavior:none;-webkit-text-size-adjust:100%}
+body{background:var(--ground);color:var(--ink);font-family:var(--serif);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button,input{font:inherit;color:inherit}
+
+/* ---------- telas ---------- */
+.screen{
+  position:fixed;inset:0;overflow:hidden;
+  opacity:0;visibility:hidden;
+  transition:opacity 0s linear .6s,visibility 0s linear .6s;
+}
+.screen.active{opacity:1;visibility:visible;transition:opacity .6s ease,visibility 0s}
+.bg{display:block;position:absolute;inset:-6%;background-size:cover;background-position:center;filter:blur(26px) brightness(.9);transform:scale(1.08)}
+
+.stage{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  height:100%;aspect-ratio:941/1672;
+  container-type:inline-size;overflow:hidden;
+}
+/* telas de formulário: a largura nunca passa da tela, então nada é cortado nas laterais */
+.stage.form{height:100%;width:min(100%,calc(100svh*941/1672));aspect-ratio:auto}
+.stage>img,.page{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;user-select:none;-webkit-user-drag:none}
+
+/* ---------- convite: página + capa deslizante ---------- */
+.hot{
+  position:absolute;left:30%;top:var(--y);width:50%;height:8%;
+  transform:translate(0,-50%);border-radius:5cqw;border:0;padding:0;margin:0;
+  background:transparent;cursor:pointer;display:block;text-decoration:none;
+}
+.hot:active{background:rgba(226,21,122,.18)}
+.hot:focus-visible{outline:3px solid var(--hot);outline-offset:-4px}
+
+.back{
+  position:absolute;left:50%;top:1.8%;transform:translateX(-50%);z-index:3;
+  font-family:var(--serif);font-size:3.2cqw;color:var(--ink);
+  background:rgba(255,246,249,.8);border:1px solid rgba(90,15,46,.45);border-radius:99px;
+  padding:1.3cqw 3.8cqw;cursor:pointer;white-space:nowrap;
+  opacity:0;visibility:hidden;transition:opacity .5s ease,visibility 0s linear .5s;
+}
+.back.show{opacity:1;visibility:visible;transition:opacity .6s ease,visibility 0s}
+.back:active{background:rgba(255,200,220,.9)}
+.back:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.cover{
+  position:absolute;inset:0;z-index:5;
+  transform:translate3d(0,0,0);will-change:transform;
+  transition:transform .55s cubic-bezier(.2,.8,.2,1);
+}
+.cover.drag{transition:none}
+.sheet{position:absolute;inset:0}
+.stage#stage{opacity:0;transition:opacity .6s ease}
+.stage#stage.ready{opacity:1}
+.cover.gone{visibility:hidden;transition:none}
+.cover>img{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
+
+/* meio da fenda desfocado: o fundo atrás da capa não fica nítido */
+.blur{position:absolute;left:12.434%;top:83.852%;width:74.708%;height:7.596%;pointer-events:none;
+  -webkit-backdrop-filter:blur(8cqw) saturate(1.1);backdrop-filter:blur(8cqw) saturate(1.1);background:rgba(255,235,242,.5);
+  -webkit-mask:url(assets/fenda-mask.png) center/100% 100% no-repeat;mask:url(assets/fenda-mask.png) center/100% 100% no-repeat}
+
+/* "Convite especial Bárbara 30 anos" no papel do meio da capa */
+.cover>img.nome{inset:auto;position:absolute;left:var(--nx,54.5%);top:var(--ny,45.5%);width:var(--nw,36cqw);height:auto;transform:translate(-50%,-50%);pointer-events:none;user-select:none;-webkit-user-drag:none}
+
+/* puxador (coração): desliza para a esquerda dentro da fenda */
+.pull{
+  position:absolute;left:76%;top:87.2%;width:20cqw;aspect-ratio:620/767;
+  transform:translate(-50%,-50%);
+  background:url(assets/puxador.webp) center/contain no-repeat;
+  border:0;padding:0;cursor:grab;touch-action:none;
+  filter:drop-shadow(0 .8cqw 1.1cqw rgba(90,10,40,.5));
+}
+.pull::before{content:"";position:absolute;inset:-14% -30%}
+.pull.settle{transition:left .5s cubic-bezier(.2,.8,.2,1)}
+.pull:active{cursor:grabbing}
+.pull:focus-visible{outline:3px solid #fff;outline-offset:4px;border-radius:30%}
+
+/* ---------- páginas de confirmação, localização e dicas ---------- */
+.ttl{
+  position:absolute;left:8%;right:8%;top:12%;height:7%;
+  display:grid;place-items:center;text-align:center;
+  font-family:var(--display);font-weight:400;font-size:10cqw;line-height:1.05;white-space:nowrap;
+  color:var(--ink);margin:0;
+}
+.panel{
+  position:absolute;left:11%;right:11%;top:22%;bottom:11%;
+  display:flex;flex-direction:column;justify-content:center;gap:3.4cqw;
+  color:var(--ink);text-align:center;
+}
+.panel[hidden]{display:none}
+.bg.soft{filter:blur(16px) brightness(1.05) saturate(1.1)}
+.card{position:absolute;inset:7% 4%;border-radius:7cqw;background:rgba(255,238,244,.84);box-shadow:0 2cqw 6cqw rgba(90,10,40,.3),inset 0 0 0 .8cqw rgba(226,21,122,.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.lb{display:block;margin:0 0 1.2cqw;font-family:var(--serif);font-size:3cqw;letter-spacing:.12em;text-transform:uppercase;text-align:left}
+.panel input[type=text]{
+  width:100%;min-height:11cqw;padding:1cqw 3.4cqw;border-radius:2.4cqw;
+  border:1.5px solid var(--line);background:rgba(255,255,255,.8);
+  font-family:var(--serif);font-size:4.6cqw;color:var(--ink);
+  box-shadow:inset 0 1px 3px rgba(90,15,46,.18);
+}
+.panel input[type=text]::placeholder{color:rgba(90,15,46,.45)}
+.panel input[type=text]:focus{outline:2px solid rgba(226,21,122,.7);outline-offset:1px}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:2.4cqw}
+.choice{position:relative}
+.choice input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer}
+.choice span{
+  display:flex;align-items:center;justify-content:center;text-align:center;min-height:11cqw;padding:1cqw 1.6cqw;border-radius:2.4cqw;
+  border:1.5px solid var(--line);background:rgba(255,255,255,.7);
+  font-size:3.7cqw;line-height:1.05;white-space:nowrap;
+}
+.choice input:checked+span{background:linear-gradient(180deg,#f0359a,#c4005f);color:#fff;border-color:#fff}
+.choice input:focus-visible+span{outline:2px solid var(--ink);outline-offset:2px}
+.stepper{display:flex;align-items:center;justify-content:center;gap:5cqw}
+.stepper button{width:11cqw;height:11cqw;border-radius:50%;border:1.5px solid var(--line);background:rgba(255,255,255,.8);font-size:6.4cqw;line-height:1;color:var(--ink);cursor:pointer;padding:0}
+.stepper output{min-width:12cqw;text-align:center;font-family:var(--display);font-size:9cqw}
+.stepper button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.err{margin:0;color:#b0003c;font-size:3.6cqw}
+.acts{display:grid;gap:2.4cqw;margin-top:1cqw}
+.btn{
+  display:flex;align-items:center;justify-content:center;min-height:11.5cqw;padding:1cqw 5cqw;border-radius:999px;
+  font-family:var(--serif);font-size:3.1cqw;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;cursor:pointer;
+}
+.btn.primary{border:1px solid #fff;color:#fff;background:linear-gradient(180deg,#f0359a,#c4005f);box-shadow:0 .8cqw 2cqw rgba(120,0,50,.35)}
+.btn.ghost{border:1.5px solid var(--line);background:transparent;color:var(--ink)}
+.btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.orn{color:var(--hot);font-size:4.4cqw;letter-spacing:.6em;text-indent:.6em}
+.big{font-family:var(--display);font-size:9.6cqw;line-height:1.1}
+.soft{font-size:4.6cqw;line-height:1.3;margin:0}
+.soft.it{font-style:italic}
+.rule{height:1px;width:60%;margin:0 auto;background:linear-gradient(90deg,transparent,var(--hot),transparent)}
+.redir{margin:1.2cqw 0 0;text-align:center;font-size:3.1cqw;line-height:1.35;opacity:.9}
+
+/* dicas para presentear: a arte inteira, sem cortar nas laterais */
+.gift{position:absolute;left:50%;top:50%;transform:translate(-50%,-52%);width:min(100%,calc(100svh*941/1672));container-type:inline-size}
+.gift img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
+.gift .btn{position:absolute;left:50%;transform:translateX(-50%);top:calc(100% + 4cqw);min-width:46cqw;background:rgba(255,246,249,.88)}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<!-- convite -->
+<audio id="music" loop preload="auto"></audio>
+<section class="screen active" id="main">
+  <div class="bg" style="background-image:url(assets/informacoes.jpg)"></div>
+  <div class="stage" id="stage">
+    <div class="sheet" id="sheet">
+      <img class="page" src="assets/informacoes.jpg" alt="Convite de Bárbara, 30 anos. It's my 30th! 30 anos, 30 motivos para comemorar. Vem brindar comigo essa nova era." width="941" height="1672" decoding="async">
+      <button class="hot" id="btn-confirm" type="button" style="--y:69.8%" aria-label="Confirme sua presença"></button>
+      <button class="hot" id="btn-map" type="button" style="--y:78.4%" aria-label="Local da festa"></button>
+      <button class="hot" id="btn-gift" type="button" style="--y:86%" aria-label="Dicas para me presentear"></button>
+      <button class="back" id="btn-cover" type="button" tabindex="-1">← voltar para a capa</button>
+    </div>
+
+    <div class="cover" id="cover">
+      <img src="assets/capa.webp" alt="" width="941" height="1672" decoding="async" fetchpriority="high">
+      <div class="blur" aria-hidden="true"></div>
+      <img class="nome" src="assets/nome.webp" alt="Convite especial: Bárbara 30 anos" width="1108" height="1092" decoding="async">
+      <button class="pull" id="pull" type="button" role="slider" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Puxador: arraste para a esquerda para abrir o convite"></button>
+    </div>
+  </div>
+</section>
+
+<!-- confirmar presença -->
+<section class="screen" id="rsvp" aria-hidden="true">
+  <div class="bg soft" style="background-image:url(assets/informacoes.jpg)"></div>
+  <div class="stage form">
+    <div class="card"></div>
+    <h2 class="ttl" id="rsvp-ttl">Confirmar presença</h2>
+    <div class="panel" id="rsvp-form-wrap">
+      <form id="rsvp-form" novalidate style="display:contents">
+        <div>
+          <label class="lb" for="rsvp-nome">Seu nome</label>
+          <input type="text" id="rsvp-nome" name="nome" placeholder="Nome e sobrenome" autocomplete="name" maxlength="60">
+        </div>
+        <div>
+          <span class="lb" id="lg-resp">Você vai?</span>
+          <div class="choices" role="radiogroup" aria-labelledby="lg-resp">
+            <label class="choice"><input type="radio" name="resp" value="sim" checked><span>Sim, eu vou!</span></label>
+            <label class="choice"><input type="radio" name="resp" value="nao"><span>Não poderei ir</span></label>
+          </div>
+        </div>
+        <div id="qtd-wrap">
+          <span class="lb" id="lg-qtd">Quantas pessoas, com você?</span>
+          <div class="stepper" role="group" aria-labelledby="lg-qtd">
+            <button type="button" id="qtd-minus" aria-label="Diminuir">−</button>
+            <output id="qtd" aria-live="polite">1</output>
+            <button type="button" id="qtd-plus" aria-label="Aumentar">+</button>
+          </div>
+        </div>
+        <p class="err" id="rsvp-err" role="alert" hidden>Escreva seu nome para continuar.</p>
+        <p class="redir" id="redir" hidden><span aria-hidden="true">💋</span> Ao enviar, você será levado ao WhatsApp para finalizar a sua confirmação.</p>
+        <div class="acts">
+          <button class="btn primary" type="submit">Enviar confirmação</button>
+          <button class="btn ghost" type="button" data-back>Voltar</button>
+        </div>
+      </form>
+    </div>
+    <div class="panel" id="rsvp-thanks" hidden>
+      <span class="orn" aria-hidden="true">♥ ✦ ♥</span>
+      <div class="big" id="thanks-title">Que alegria!</div>
+      <div class="rule"></div>
+      <p class="soft" id="thanks-text"></p>
+      <div class="acts">
+        <a class="btn primary" id="thanks-wa" target="_blank" rel="noopener noreferrer" href="#" hidden>Avisar no WhatsApp</a>
+        <button class="btn ghost" type="button" data-back>Voltar ao convite</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- localização -->
+<section class="screen" id="map" aria-hidden="true">
+  <div class="bg soft" style="background-image:url(assets/informacoes.jpg)"></div>
+  <div class="stage form">
+    <div class="card"></div>
+    <h2 class="ttl">Local da festa</h2>
+    <div class="panel">
+      <span class="orn" aria-hidden="true">♥ ✦ ♥</span>
+      <div class="soft it">A comemoração será</div>
+      <div class="big" id="map-place">Local a confirmar</div>
+      <p class="soft" id="map-addr" hidden></p>
+      <div class="rule"></div>
+      <p class="soft it" id="map-when" hidden></p>
+      <div class="acts">
+        <a class="btn primary" id="map-open" target="_blank" rel="noopener noreferrer" href="#">Abrir no mapa</a>
+        <button class="btn ghost" type="button" data-back>Voltar</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- dicas para presentear -->
+<section class="screen" id="gifts" aria-hidden="true">
+  <div class="bg soft" style="background-image:url(assets/dicas.jpg)"></div>
+  <div class="gift">
+    <img src="assets/dicas.jpg" alt="Não sabe com o que me presentear? Dicas: hidratantes, livros de romance, perfumes fortes, sandálias 37 e maquiagens." width="941" height="941" decoding="async">
+    <button class="btn" type="button" data-back>Voltar</button>
+  </div>
+</section>
+
+<script>
+(function(){
+  /* ====== dados do convite (edite aqui) ====== */
+  var CONFIG={
+    nome:'Bárbara',
+    idade:30,
+    local:'Na minha casa',        /* texto que aparece na tela do local */
+    localFrase:'na casa da Bárbara', /* usado na mensagem de confirmação */
+    mapa:false,                   /* true = mostra o botão "Abrir no mapa" (precisa de endereço) */
+    endereco:'',
+    data:'5 de dezembro',         /* ex.: '14 de dezembro' */
+    hora:'20h',                   /* ex.: '20h' */
+    whatsapp:'',                  /* ex.: '5585999999999' */
+    musica:'assets/musica.mp3'
+  };
+
+  var $=function(s){return document.querySelector(s)};
+  var screens={main:$('#main'),rsvp:$('#rsvp'),map:$('#map'),gifts:$('#gifts')};
+  var cover=$('#cover'),pull=$('#pull'),stage=$('#stage');
+  var opened=false;
+
+  /* a cor das barras do navegador acompanha a arte da tela atual */
+  var TONES={cover:'#d9506c',info:'#e2607a',form:'#e2607a'};
+  function tone(c){document.documentElement.style.background=c;document.body.style.background=c;$('#tc').setAttribute('content',c)}
+  function go(name){
+    if(name==='main')tone(opened?TONES.info:TONES.cover);else tone(TONES.form);
+    Object.keys(screens).forEach(function(k){
+      var el=screens[k],on=k===name;
+      el.classList.toggle('active',on);
+      el.style.zIndex=on?10:5;
+      el.setAttribute('aria-hidden',on?'false':'true');
+      if('inert' in el) el.inert=!on;
+    });
+  }
+  go('main');
+  /* convite ainda fechado: os botões da página ficam inacessíveis por baixo da capa */
+  document.querySelectorAll('#main .hot,#btn-cover').forEach(function(b){b.tabIndex=-1;b.setAttribute('aria-hidden','true')});
+
+  /* ====== puxador: desliza dentro da fenda (para a esquerda) enquanto a capa sai para o lado ====== */
+  /* v = quanto o dedo andou para a esquerda (px). O puxador acompanha o dedo: parte dele é o puxador
+     correndo dentro da fenda (r) e parte é a capa deslizando (c = K*v). */
+  var X_START=76, TRAVEL=40, K=.25, THRESH=TRAVEL/100/(1-K);   /* X_START e TRAVEL em % da largura; THRESH em fração da largura */
+  var s=0,s0=0,startX=0,dragging=false,moved=false,W=0;
+  function measure(){W=stage.getBoundingClientRect().width}
+  function parts(v){return {r:Math.min(v*(1-K),TRAVEL/100*W),c:v*K}}
+  var music=$('#music'),musicOn=false,hasMusic=!!CONFIG.musica;
+  if(hasMusic)music.src=CONFIG.musica;
+  /* navegadores só liberam som depois de um toque: no primeiro toque no puxador "destravamos" o áudio */
+  var unlocked=false;
+  function unlock(){
+    if(!hasMusic||unlocked)return;unlocked=true;
+    music.muted=true;
+    var p=music.play();
+    if(p&&p.then)p.then(function(){ if(!musicOn){music.pause();music.currentTime=0} music.muted=false },function(){unlocked=false;music.muted=false});
+    else music.muted=false;
+  }
+  function playMusic(){
+    if(!hasMusic||musicOn)return;musicOn=true;music.muted=false;
+    var p=music.play();if(p&&p.catch)p.catch(function(){musicOn=false});
+  }
+  function stopMusic(){
+    if(!hasMusic)return;
+    musicOn=false;music.pause();
+    try{music.currentTime=0}catch(_){}
+  }
+  function render(v){
+    var q=parts(v);
+    if(!opened){ if(v>=THRESH*W*.5)playMusic(); else if(musicOn)stopMusic(); }
+    cover.style.transform='translate3d('+(-q.c)+'px,0,0)';
+    pull.style.left=(X_START-q.r/W*100)+'%';
+    pull.setAttribute('aria-valuenow',Math.min(100,Math.round(v/(THRESH*W)*100)));
+  }
+  function finish(){
+    if(opened)return;
+    opened=true;dragging=false;tone(TONES.info);
+    measure();playMusic();
+    cover.classList.remove('drag');pull.classList.add('settle');
+    pull.style.left=(X_START-TRAVEL)+'%';
+    cover.style.transform='translate3d('+(-(W*1.04))+'px,0,0)';
+    pull.disabled=true;
+    document.querySelectorAll('#main .hot,#btn-cover').forEach(function(b){b.tabIndex=0;b.removeAttribute('aria-hidden')});
+    setTimeout(function(){cover.classList.add('gone');if(opened)$('#btn-cover').classList.add('show')},650);
+  }
+  function snapBack(){
+    s=0;pull.classList.add('settle');
+    render(0);
+    setTimeout(function(){if(!opened&&!dragging)pull.classList.remove('settle')},600);
+  }
+  /* voltar para a capa: a capa volta para o lugar e a música para */
+  function reopenCover(){
+    if(!opened)return;
+    opened=false;s=0;measure();tone(TONES.cover);
+    $('#btn-cover').classList.remove('show');
+    stopMusic();
+    cover.classList.remove('gone');
+    void cover.offsetWidth;
+    cover.style.transform='translate3d(0,0,0)';
+    pull.style.left=X_START+'%';
+    pull.disabled=false;
+    setTimeout(function(){pull.classList.remove('settle');pull.setAttribute('aria-valuenow',0)},560);
+    document.querySelectorAll('#main .hot,#btn-cover').forEach(function(b){b.tabIndex=-1;b.setAttribute('aria-hidden','true')});
+  }
+  $('#btn-cover').addEventListener('click',reopenCover);
+  pull.addEventListener('pointerdown',function(e){
+    if(opened)return;
+    measure();
+    unlock();
+    dragging=true;moved=false;startX=e.clientX;s0=s;
+    cover.classList.add('drag');
+    try{pull.setPointerCapture(e.pointerId)}catch(_){}
+    e.preventDefault();
+  });
+  pull.addEventListener('pointermove',function(e){
+    if(!dragging)return;
+    var dx=startX-e.clientX;
+    if(Math.abs(dx)>6)moved=true;
+    s=Math.max(0,Math.min(THRESH*W,s0+dx));
+    render(s);
+    if(s>=THRESH*W*.995)finish();
+  });
+  pull.addEventListener('pointerup',function(){
+    if(!dragging)return;
+    dragging=false;cover.classList.remove('drag');
+    if(musicOn&&music.paused){musicOn=false;playMusic()}
+    if(!moved||s>=THRESH*W*.9)finish();          /* toque simples ou quase no fim: abre */
+    else snapBack();                              /* soltou no meio do caminho: a capa volta */
+  });
+  pull.addEventListener('pointercancel',function(){if(!dragging)return;dragging=false;cover.classList.remove('drag');snapBack()});
+  pull.addEventListener('keydown',function(e){
+    if(opened)return;
+    measure();
+    if(e.key==='ArrowLeft'){e.preventDefault();s=Math.min(THRESH*W,s+.1*W);render(s);if(s>=THRESH*W*.995)finish()}
+    else if(e.key==='ArrowRight'){e.preventDefault();s=Math.max(0,s-.1*W);render(s)}
+    else if(e.key==='Enter'||e.key===' '){e.preventDefault();finish()}
+  });
+  measure();render(0);
+  window.addEventListener('resize',function(){measure();if(!opened&&!dragging)render(s)});
+
+  /* só mostra o convite quando a capa e o puxador já carregaram */
+  (function(){
+    var ph=new Image();ph.src='assets/puxador.webp';
+    var imgs=[cover.querySelector('img'),ph],done=false;
+    function show(){if(done)return;done=true;stage.classList.add('ready')}
+    var left=imgs.length;
+    imgs.forEach(function(im){
+      var ok=function(){if(--left===0)show()};
+      if(im.complete)ok();else{im.addEventListener('load',ok);im.addEventListener('error',ok)}
+    });
+    setTimeout(show,5000);
+  })();
+
+  /* ====== botões ====== */
+  $('#btn-confirm').addEventListener('click',function(){
+    $('#rsvp-thanks').hidden=true;$('#rsvp-form-wrap').hidden=false;$('#rsvp-ttl').textContent='Confirmar presença';$('#rsvp-err').hidden=true;
+    go('rsvp');
+  });
+  $('#btn-map').addEventListener('click',function(){go('map')});
+  $('#btn-gift').addEventListener('click',function(){go('gifts')});
+  document.querySelectorAll('[data-back]').forEach(function(b){b.addEventListener('click',function(){go('main')})});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&opened)go('main')});
+
+  /* ====== localização ====== */
+  var quando=(CONFIG.data?CONFIG.data:'')+(CONFIG.data&&CONFIG.hora?' · ':'')+(CONFIG.hora?'às '+CONFIG.hora:'');
+  var q=CONFIG.local+(CONFIG.endereco?', '+CONFIG.endereco:'');
+  $('#map-open').href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);
+  $('#map-place').textContent=CONFIG.local||'Local a confirmar';
+  if(!CONFIG.local||!CONFIG.mapa||!CONFIG.endereco)$('#map-open').hidden=true;
+  if(CONFIG.endereco){var a=$('#map-addr');a.textContent=CONFIG.endereco;a.hidden=false}
+  if(quando){var w=$('#map-when');w.textContent=quando;w.hidden=false}
+
+  /* ====== confirmar presença ====== */
+  var form=$('#rsvp-form'),nome=$('#rsvp-nome'),err=$('#rsvp-err');
+  var qtdEl=$('#qtd'),qtdWrap=$('#qtd-wrap'),qtd=1;
+  function setQtd(n){qtd=Math.max(1,Math.min(10,n));qtdEl.textContent=qtd}
+  $('#qtd-minus').addEventListener('click',function(){setQtd(qtd-1)});
+  $('#qtd-plus').addEventListener('click',function(){setQtd(qtd+1)});
+  function resp(){return form.querySelector('input[name=resp]:checked').value}
+  form.querySelectorAll('input[name=resp]').forEach(function(r){
+    r.addEventListener('change',function(){qtdWrap.hidden=resp()==='nao'});
+  });
+  nome.addEventListener('input',function(){err.hidden=true});
+  if(CONFIG.whatsapp)$('#redir').hidden=false;
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    var n=nome.value.replace(/\s+/g,' ').trim();
+    if(n.length<2){err.hidden=false;nome.focus();return}
+    var vai=resp()==='sim',first=n.split(' ')[0],msg,titulo,texto;
+    var onde=(quando?', '+quando:'')+(CONFIG.localFrase?', '+CONFIG.localFrase:'');
+    if(vai){
+      titulo='Que alegria, '+first+'!';
+      texto='Presença confirmada para '+qtd+(qtd===1?' pessoa':' pessoas')+'. Esperamos você'+(quando?' em '+quando:'')+(CONFIG.localFrase?', '+CONFIG.localFrase:'')+'.';
+      msg='Olá! Confirmo presença no aniversário de '+CONFIG.idade+' anos da '+CONFIG.nome+(onde?' ('+onde.slice(2)+')':'')+'. Nome: '+n+'. Pessoas: '+qtd+'.';
+    }else{
+      titulo='Obrigado por avisar, '+first+'!';
+      texto='Sentiremos a sua falta. Seu recado foi registrado com carinho.';
+      msg='Olá! Infelizmente não poderei ir ao aniversário de '+CONFIG.idade+' anos da '+CONFIG.nome+'. Nome: '+n+'.';
+    }
+    $('#thanks-title').textContent=titulo;
+    $('#thanks-text').textContent=texto;
+    var wa=$('#thanks-wa');
+    if(CONFIG.whatsapp){wa.href='https://wa.me/'+CONFIG.whatsapp+'?text='+encodeURIComponent(msg);wa.hidden=false;setTimeout(function(){window.open(wa.href,'_blank','noopener')},900)}else{wa.hidden=true}
+    $('#rsvp-form-wrap').hidden=true;$('#rsvp-thanks').hidden=false;$('#rsvp-ttl').textContent='Obrigado!';
+  });
+})();
+</script>
+
+</body>
+</html>
