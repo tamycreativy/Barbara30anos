@@ -84,7 +84,11 @@ button,input{font:inherit;color:inherit}
 .cover>img.slotfill{inset:auto;left:10.627%;top:82.835%;width:78.64%;height:9.569%;object-fit:fill}
 
 /* "Convite especial Bárbara 30 anos" no papel do meio da capa */
-.cover>img.nome{inset:auto;position:absolute;left:var(--nx,54.5%);top:var(--ny,45.5%);width:var(--nw,36cqw);height:auto;transform:translate(-50%,-50%);pointer-events:none;user-select:none;-webkit-user-drag:none}
+.cover>img.nome{inset:auto;position:absolute;left:var(--nx,54.5%);top:var(--ny,36%);width:var(--nw,36cqw);height:auto;transform:translate(-50%,-50%);pointer-events:none;user-select:none;-webkit-user-drag:none}
+
+/* aviso embaixo do título, no papel da capa */
+.dica{position:absolute;left:54.5%;top:58.5%;width:32cqw;transform:translate(-50%,-50%);margin:0;text-align:center;font-family:var(--display);font-size:5.2cqw;line-height:1.12;color:#2a0f1c;pointer-events:none;text-wrap:balance}
+.dica i{display:block;margin-top:1.2cqw;font-style:normal;font-size:7cqw;line-height:1;color:var(--hot)}
 
 /* puxador (coração): desliza para a esquerda dentro da fenda */
 .pull{
@@ -180,6 +184,7 @@ button,input{font:inherit;color:inherit}
       <img src="assets/capa.webp" alt="" width="941" height="1672" decoding="async" fetchpriority="high">
       
       <img class="nome" src="assets/nome.webp" alt="Convite especial: Bárbara 30 anos" width="1108" height="1092" decoding="async">
+      <p class="dica" aria-hidden="true">Arraste o pingente para revelar as informações da festa<i>←</i></p>
       <button class="pull" id="pull" type="button" role="slider" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Puxador: arraste para a esquerda para abrir o convite"></button>
     </div>
   </div>
